@@ -5,11 +5,9 @@
     url: https://get.docker.com/
     dest: /root/install_docker.sh
     mode: 0700
-  when: check_docker.stderr.find('service could not be found') != -1
 
 - name: Install Docker
   shell: /root/install_docker.sh
-  when: check_docker.stderr.find('service could not be found') != -1
 
 - name: Enable Docker
   systemd:
