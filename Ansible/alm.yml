@@ -14,8 +14,11 @@
   become: yes
 
   roles:
-    - jenkins
-  tags: jenkins
+    - geerlingguy.repo-epel
+    - geerlingguy.jenkins
+    - geerlingguy.git
+    - tecris.maven
+    - geerlingguy.ansible
 
 - name: Deploy Nexus Server
   hosts: nexus_server
