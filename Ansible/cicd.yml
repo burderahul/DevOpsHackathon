@@ -1,0 +1,16 @@
+---
+# Setup Jenkins Server
+- name: provision Jenkins server
+  hosts: jenkins_server
+  become: yes
+
+  roles:
+    - java
+    - git
+    - python
+    - jenkins
+    - docker
+
+
+
+

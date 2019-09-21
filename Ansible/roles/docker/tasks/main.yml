@@ -1,0 +1,58 @@
+---
+- name: Check if docker is installed
+  command: systemctl status docker
+  register: check_docker
+  ignore_errors: yes
+
+- name: Download Docker
+  get_url:
+    url: https://get.docker.com/
+    dest: /root/install_docker.sh
+    mode: 0700
+  when: check_docker.stderr.find('service could not be found') != -1
+
+- name: Install Docker
+  shell: /root/install_docker.sh
+  when: check_docker.stderr.find('service could not be found') != -1
+
+- name: Enable Docker
+  systemd:
+    name: docker
+    enabled: yes
+    masked: no
+
+- name: Start Docker
+  systemd:
+    name: docker
+    state: started
+
+- name: Download and install Docker Compose
+  get_url:
+    url: https://github.com/docker/compose/releases/download/1.21.2/docker-compose-Linux-x86_64
+    dest: /usr/bin/docker-compose
+    mode: 0755
+
+- name: Update jenkins user in docker
+  shell: sudo usermod -aG docker jenkins
+
+- name: "add insecure nexus registry"
+  copy:
+    src: handlers/daemon.json
+    dest: /etc/docker/daemon.json
+
+- name: "restart docker"
+  service:
+    name: docker
+    state: restarted
+
+- name: Adding user groups
+  user:
+    name: jenkins
+    shell: /bin/bash
+    groups: docker
+    append: yes
+
+- name: Restart Jenkins
+  service:
+    name: jenkins
+    state: restarted
