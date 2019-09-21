@@ -1,8 +1,4 @@
 ---
-- name: Check if docker is installed
-  command: systemctl status docker
-  register: check_docker
-  ignore_errors: yes
 
 - name: Download Docker
   get_url:
