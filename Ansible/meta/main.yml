@@ -1,0 +1,9 @@
+dependencies:
+  - geerlingguy.java
+  - geerlingguy.jenkins
+  - geerlingguy.sonar
+  - wtanaka.unzip
+  - savoirfairelinux.nexus3-oss
+  - geerlingguy.git
+  - tecris.maven
+  - geerlingguy.ansible
