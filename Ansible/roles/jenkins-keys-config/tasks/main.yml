@@ -1,4 +1,4 @@
- - name: Add Jenkins User
+- name: Add Jenkins User
   user:
     name: jenkins
     comment: "Jenkins CI User"
