@@ -1,17 +1,5 @@
 ---
 
-- name: Install Java 8 using YUM.
-  yum:
-    name: "{{java.VERSION}}"
-    state: present
-  become: true
-
-- name: Correct the alternatives to change default Java version.
-  alternatives:
-    name: java
-    link: /bin/java
-    path: "{{java.ALTERNATIVES}}"
-
 - name: Download Jenkins repo yum URL for
   get_url:
     url: "{{jenkins.repo_URL}}"
@@ -27,13 +15,6 @@
   yum:
     name: jenkins
     state: present
-
-- name: Change Jenkins JAVA options
-  lineinfile:
-    dest=/etc/sysconfig/jenkins
-    regexp=^JENKINS_JAVA_OPTIONS=
-    line=JENKINS_JAVA_OPTIONS="{{jenkins.JAVA_OPTIONS}}"
-  become: true
 
 - name: Start Jenkins service and enable on boot
   service:
