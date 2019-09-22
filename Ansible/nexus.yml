@@ -28,7 +28,7 @@
         start_nexus_script_destination: /etc/systemd/system/
 
 - hosts: nexus_server
-  - tasks:
+  tasks:
       - name: "enable nexus service and start the same"
         systemd:
           state: started
