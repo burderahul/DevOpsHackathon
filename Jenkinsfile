@@ -21,7 +21,7 @@ node{
 			withEnv(["gitUrl=$gitUrl"]) {
 				// Checkout source code repository
 				git "$gitUrl"
-				mvnHome = tool 'Local-Maven'
+				mvnHome = tool 'localmaven'
 			}
 		}
 	}
