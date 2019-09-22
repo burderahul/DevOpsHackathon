@@ -44,7 +44,7 @@ node{
     		timestamps{
     			// Upload war file to Nexus artifactory
     			try {
-    				nexusPublisher nexusInstanceId: 'Nexus-Server', nexusRepositoryId: 'maven-releases', packages: [[$class: 'MavenPackage', mavenAssetList: [[classifier: '', extension: '', filePath: './src/sample-eureka_grp6/eureka-server/target/eureka-server-0.0.1-SNAPSHOT.jar']], mavenCoordinate: [artifactId: 'eureka-server', groupId: 'net.javatutorial.tutorials', packaging: 'jar', version: '${JOB_NAME}-${BUILD_NUMBER}']]]
+    				nexusPublisher nexusInstanceId: 'Nexus-Server', nexusRepositoryId: 'maven-releases', packages: [[$class: 'MavenPackage', mavenAssetList: [[classifier: '', extension: '', filePath: './src/sample-eureka_grp6/eureka-server/target/']], mavenCoordinate: [artifactId: 'eureka-server', groupId: 'net.javatutorial.tutorials', packaging: 'jar', version: '${JOB_NAME}-${BUILD_NUMBER}']]]
 
     			} catch(Exception ex) {
     				sh "exit 1"
@@ -94,7 +94,7 @@ stage('Create and Push Image') {
 					}
 				} */
 
-				def customImage =  docker.build("/src/sample-eureka_grp6/eureka-server/target/eureka-server-0.0.1-SNAPSHOT.jar")
+				def customImage =  docker.build("src/sample-eureka_grp6/eureka-server/")
 			} catch(Exception ex) {
 				sh "exit 1"
 			}
