@@ -29,7 +29,7 @@ node('master') {
 			// Run the maven build
 			withEnv(["MVN_HOME=$mvnHome"]) {
 				if (isUnix()) {
-					jobStatus = sh(returnStatus: true, script: 'cd ${WORKSPACE}/SimpleServlet/ && "$MVN_HOME/bin/mvn" -Dmaven.test.failure.ignore clean package')
+					jobStatus = sh(returnStatus: true, script: 'cd ${WORKSPACE}/src/sample-eureka_grp6/ && "$MVN_HOME/bin/mvn" -Dmaven.test.failure.ignore clean package')
 					
 					if(jobStatus != 0) {
 						sh "exit 1"
@@ -44,7 +44,7 @@ node('master') {
 			// Run maven command to perform static analysis & publish report in sonar server
 			withEnv(["MVN_HOME=$mvnHome", "sonarHost=$sonarHost", "sonarPort=$sonarPort"]) {
 				if (isUnix()) {
-					jobStatus = sh(returnStatus: true, script: 'cd ${WORKSPACE}/SimpleServlet/ && "$MVN_HOME/bin/mvn" sonar:sonar -Dsonar.projectKey=tcs-devops-hackathon-prep-project -Dsonar.host.url="http://$sonarHost:$sonarPort" -Dsonar.login=ec4b9a052afbc6884c94e9e754ad3dc7a27dfe2f')
+					jobStatus = sh(returnStatus: true, script: 'cd ${WORKSPACE}/src/sample-eureka_grp6/ && "$MVN_HOME/bin/mvn" sonar:sonar -Dsonar.projectKey=DevOpsHackathon -Dsonar.host.url="http://$sonarHost:$sonarPort" -Dsonar.login=118996445fb54e4903164d212bae9d903d6de135')
 					
 					if(jobStatus != 0) {
 						sh "exit 1"
@@ -54,7 +54,7 @@ node('master') {
 		}
 	}
 	*/
-	
+/*
 	stage('Upload Build Artifact') {
 		timestamps{
 			// Upload war file to Nexus artifactory
@@ -116,4 +116,4 @@ node('master') {
 		}
 	}
 
-}
+} */

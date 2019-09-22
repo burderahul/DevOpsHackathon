@@ -127,7 +127,7 @@ sudo unzip sonarqube-7.6.zip
 sudo mv sonarqube-7.6 sonarqube
 sudo vi /opt/sonarqube/conf/sonar.properties
 
-"sonar.jdbc.username=sonarqube
+    "sonar.jdbc.username=sonarqube
 sonar.jdbc.password=your-strong-password
 sonar.jdbc.url=jdbc:postgresql://localhost/sonar"
 "sonar.web.host=0.0.0.0
