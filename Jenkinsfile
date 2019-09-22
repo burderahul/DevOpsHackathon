@@ -52,7 +52,7 @@ node{
     		}
     	}
 
-}*/
+*/
 
 stage('Static Analysis') {
 		timestamps {
@@ -68,3 +68,4 @@ stage('Static Analysis') {
 			}
 		}
 	}
+}
