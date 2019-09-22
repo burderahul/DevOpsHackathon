@@ -1,11 +1,19 @@
 ---
+
+- name: Install Roles from Galaxy
+  hosts: all
+  connection: local
+  tasks:
+    - name: installing required ansible-galaxy roles
+      command: "ansible-galaxy install --ignore-errors -r requirements.yml"
+
 - hosts: nexus_server
   tasks:
     - name: Install roles from Ansible Galaxy
       shell: ansible-galaxy install "{{ item }}"
       with_items:
         - geerlingguy.docker
-        - andrewrothstein.docker-compose
+        - docker-compose
 
 
 - hosts: nexus_server

@@ -1,5 +1,8 @@
 - src: geerlingguy.java
 
+- src: geerlingguy.docker
+- src: andrewrothstein.docker-compose
+
 - src: geerlingguy.jenkins
 
 - src: geerlingguy.postgresql
