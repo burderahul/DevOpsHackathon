@@ -1,128 +1,119 @@
-#!groovy​
+node('master') {
+	def gitUrl = "https://github.com/burderahul/DevOpsHackathon.git"
+	def mvnHome
+	def registryHost = "35.193.189.172"
+	def registryPort = "8081"
+	def registryDockerPort = "8083"
+	def registryUser = "admin"
+	def registryPassword = "admin"
+	def sonarHost = "104.198.182.112"
+	def sonarPort = "9000"
+	def kubernetesNamespace= "default"
+	def gkeProjectId = "calcium-storm-252622"
+	def gkeClusterName = "standard-cluster-2"
+	def gkeProjectZone = "us-central1-a"
+	
+	stage('Checkout') { 
+		timestamps {
+			cleanWs()
+			withEnv(["gitUrl=$gitUrl"]) {
+				// Checkout source code repository
+				git "$gitUrl"
+				mvnHome = tool 'Local-Maven'
+			}
+		}
+	}
+	
+	stage('Build') {
+		timestamps {
+			// Run the maven build
+			withEnv(["MVN_HOME=$mvnHome"]) {
+				if (isUnix()) {
+					jobStatus = sh(returnStatus: true, script: 'cd ${WORKSPACE}/SimpleServlet/ && "$MVN_HOME/bin/mvn" -Dmaven.test.failure.ignore clean package')
+					
+					if(jobStatus != 0) {
+						sh "exit 1"
+					} 
+				}
+			}
+		}
+	}
+	/*
+	stage('Static Analysis') {
+		timestamps {
+			// Run maven command to perform static analysis & publish report in sonar server
+			withEnv(["MVN_HOME=$mvnHome", "sonarHost=$sonarHost", "sonarPort=$sonarPort"]) {
+				if (isUnix()) {
+					jobStatus = sh(returnStatus: true, script: 'cd ${WORKSPACE}/SimpleServlet/ && "$MVN_HOME/bin/mvn" sonar:sonar -Dsonar.projectKey=tcs-devops-hackathon-prep-project -Dsonar.host.url="http://$sonarHost:$sonarPort" -Dsonar.login=ec4b9a052afbc6884c94e9e754ad3dc7a27dfe2f')
+					
+					if(jobStatus != 0) {
+						sh "exit 1"
+					} 
+				}
+			}
+		}
+	}
+	*/
+	
+	stage('Upload Build Artifact') {
+		timestamps{
+			// Upload war file to Nexus artifactory
+			try {
+				nexusPublisher nexusInstanceId: 'Nexus-Server', nexusRepositoryId: 'maven-releases', packages: [[$class: 'MavenPackage', mavenAssetList: [[classifier: '', extension: '', filePath: './SimpleServlet/target/SimpleServlet-1.war']], mavenCoordinate: [artifactId: 'SimpleServlet', groupId: 'net.javatutorial.tutorials', packaging: 'war', version: '${JOB_NAME}-${BUILD_NUMBER}']]]
+				
+			} catch(Exception ex) {
+				sh "exit 1"
+			}
+		}
+	}
+	
 
-// FULL_BUILD -> true/false build parameter to define if we need to run the entire stack for lab purpose only
-final FULL_BUILD = params.FULL_BUILD
-// HOST_PROVISION -> server to run ansible based on provision/inventory.ini
-final HOST_PROVISION = params.HOST_PROVISION
+	stage('Create and Push Image') {
+		timestamps {
+			try {
+				
+				withEnv(["MVN_HOME=$mvnHome", "registryHost=$registryHost", "registryPort=$registryPort", "registryDockerPort=$registryDockerPort", "registryUser=$registryUser", "registryPassword=$registryPassword"]) {
 
-final GIT_URL = 'https://github.com/burderahul/DevOpsHackathon.git'
-final NEXUS_URL = 'nexus.local:8081'
-
-stage('Build') {
-    node {
-        git GIT_URL
-        withEnv(["PATH+MAVEN=${tool 'm3'}/bin"]) {
-            if(FULL_BUILD) {
-                def pom = readMavenPom file: 'pom.xml'
-                sh "mvn -B versions:set -DnewVersion=${pom.version}-${BUILD_NUMBER}"
-                sh "mvn -B -Dmaven.test.skip=true clean package"
-                stash name: "artifact", includes: "target/soccer-stats-*.war"
-            }
-        }
-    }
-}
-
-if(FULL_BUILD) {
-    stage('Unit Tests') {   
-        node {
-            withEnv(["PATH+MAVEN=${tool 'm3'}/bin"]) {
-                sh "mvn -B clean test"
-                stash name: "unit_tests", includes: "target/surefire-reports/**"
-            }
-        }
-    }
-}
-
-if(FULL_BUILD) {
-    stage('Integration Tests') {
-        node {
-            withEnv(["PATH+MAVEN=${tool 'm3'}/bin"]) {
-                sh "mvn -B clean verify -Dsurefire.skip=true"
-                stash name: 'it_tests', includes: 'target/failsafe-reports/**'
-            }
-        }
-    }
-}
-
-if(FULL_BUILD) {
-    stage('Static Analysis') {
-        node {
-            withEnv(["PATH+MAVEN=${tool 'm3'}/bin"]) {
-                withSonarQubeEnv('sonar'){
-                    unstash 'it_tests'
-                    unstash 'unit_tests'
-                    sh 'mvn sonar:sonar -DskipTests'
-                }
-            }
-        }
-    }
-}
-
-if(FULL_BUILD) {
-    stage('Approval') {
-        timeout(time:3, unit:'DAYS') {
-            input 'Do I have your approval for deployment?'
-        }
-    }
-}
+					if (isUnix()) {
+						// Download war file from Nexus repository
+						jobStatus = sh(returnStatus: true, script: '"$MVN_HOME/bin/mvn" dependency:get -DremoteRepositories=http://"${registryHost}":"${registryPort}"/repository/maven-releases/ -DgroupId=net.javatutorial.tutorials -DartifactId=SimpleServlet -Dversion=${JOB_NAME}-${BUILD_NUMBER} -Dpackaging=war -Ddest=${WORKSPACE}/docker/')
+						
+						if(jobStatus != 0) {
+							sh "exit 1"
+						} 
+						
+						// Create & push Docker Image
+						loginStatus = sh(returnStatus: true, script: 'docker login "${registryHost}":"${registryDockerPort}" -u "${registryUser}" -p "${registryPassword}"')
+						if(loginStatus != 0) {
+							sh "Login to Docker Registry failed"
+							sh "exit 1"
+						}
+						def customImage =  docker.build("${registryHost}:${registryDockerPort}/simpleservlet:${JOB_NAME}-${BUILD_NUMBER}", "${WORKSPACE}/docker/")
+						customImage.push()
+					}
+				}
 
 
-if(FULL_BUILD) {
-    stage('Artifact Upload') {
-        node {
-            unstash 'artifact'
+			} catch(Exception ex) {
+				sh "exit 1"
+			}
+		}
+	}
+	
+	stage('Deploy') {
+		timestamps {
+			try {
+				withEnv(["kubernetesNamespace=$kubernetesNamespace", "gkeProjectId=$gkeProjectId", "gkeClusterName=$gkeClusterName", "gkeProjectZone=$gkeProjectZone" ]) {
+					// Deploy docker image to kubernetes cluster
+					sh "sed 's/IMAGE_VERSION/${JOB_NAME}-${BUILD_NUMBER}/g' ${WORKSPACE}/docker/simpleservlet-deployment.yaml > ${WORKSPACE}/docker/simpleservlet-deployment-copy.yaml"
+					sh "mv ${WORKSPACE}/docker/simpleservlet-deployment-copy.yaml ${WORKSPACE}/docker/simpleservlet-deployment.yaml"
+					
+					step([$class: 'KubernetesEngineBuilder',namespace: "$kubernetesNamespace" , projectId: "$gkeProjectId" , clusterName: "$gkeClusterName" , zone: "$gkeProjectZone" , manifestPattern: 'docker/simpleservlet-deployment.yaml', credentialsId: "$gkeProjectId" , verifyDeployments: false])
+				}
+			} catch(Exception ex) {
+				sh "exit 1"
+			}
+		}
+	}
 
-            def pom = readMavenPom file: 'pom.xml'
-            def file = "${pom.artifactId}-${pom.version}"
-            def jar = "target/${file}.war"
-
-            sh "cp pom.xml ${file}.pom"
-
-            nexusArtifactUploader artifacts: [
-                    [artifactId: "${pom.artifactId}", classifier: '', file: "target/${file}.war", type: 'war'],
-                    [artifactId: "${pom.artifactId}", classifier: '', file: "${file}.pom", type: 'pom']
-                ], 
-                credentialsId: 'nexus', 
-                groupId: "${pom.groupId}", 
-                nexusUrl: NEXUS_URL, 
-                nexusVersion: 'nexus3', 
-                protocol: 'http', 
-                repository: 'ansible-meetup', 
-                version: "${pom.version}"        
-        }
-    }
-}
-
-
-stage('Deploy') {
-    node {
-        def pom = readMavenPom file: "pom.xml"
-        def repoPath =  "${pom.groupId}".replace(".", "/") + 
-                        "/${pom.artifactId}"
-
-        def version = pom.version
-
-        if(!FULL_BUILD) { //takes the last version from repo
-            sh "curl -o metadata.xml -s http://${NEXUS_URL}/repository/ansible-meetup/${repoPath}/maven-metadata.xml"
-            version = sh script: 'xmllint metadata.xml --xpath "string(//latest)"',
-                         returnStdout: true
-        }
-        def artifactUrl = "http://${NEXUS_URL}/repository/ansible-meetup/${repoPath}/${version}/${pom.artifactId}-${version}.war"
-
-        withEnv(["ARTIFACT_URL=${artifactUrl}", "APP_NAME=${pom.artifactId}"]) {
-            echo "The URL is ${env.ARTIFACT_URL} and the app name is ${env.APP_NAME}"
-
-            // install galaxy roles
-            sh "ansible-galaxy install -vvv -r provision/requirements.yml -p provision/roles/"        
-
-            ansiblePlaybook colorized: true, 
-            credentialsId: 'ssh-jenkins',
-            limit: "${HOST_PROVISION}",
-            installation: 'ansible',
-            inventory: 'provision/inventory.ini', 
-            playbook: 'provision/playbook.yml', 
-            sudo: true,
-            sudoUser: 'jenkins'
-        }
-    }
 }
