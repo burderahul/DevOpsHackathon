@@ -94,7 +94,7 @@ stage('Create and Push Image') {
 					}
 				} */
 
-				def customImage =  docker.build("my_image", "/var/lib/jenkins/workspace/devops-project/src/sample-eureka_grp6/eureka-server/")
+				def customImage =  docker.build("my_image:${JOB_NAME}-${BUILD_NUMBER}", "${WORKSPACE}/src/sample-eureka_grp6/eureka-server/")
 			} catch(Exception ex) {
 				sh "exit 1"
 			}
