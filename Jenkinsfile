@@ -94,7 +94,7 @@ stage('Create and Push Image') {
 					}
 				} */
 
-				def customImage =  docker.build("src/sample-eureka_grp6/eureka-server/")
+				def customImage =  docker.build("burderahul/DevOpsHackathon/src/sample-eureka_grp6/eureka-server/")
 			} catch(Exception ex) {
 				sh "exit 1"
 			}
