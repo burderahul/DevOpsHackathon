@@ -1,4 +1,4 @@
-node {
+pipeline {
 	def gitUrl = "https://github.com/burderahul/DevOpsHackathon.git"
 	def mvnHome
 	def registryHost = "35.193.189.172"
@@ -38,82 +38,5 @@ node {
 			}
 		}
 	}
-	/*
-	stage('Static Analysis') {
-		timestamps {
-			// Run maven command to perform static analysis & publish report in sonar server
-			withEnv(["MVN_HOME=$mvnHome", "sonarHost=$sonarHost", "sonarPort=$sonarPort"]) {
-				if (isUnix()) {
-					jobStatus = sh(returnStatus: true, script: 'cd ${WORKSPACE}/src/sample-eureka_grp6/ && "$MVN_HOME/bin/mvn" sonar:sonar -Dsonar.projectKey=DevOpsHackathon -Dsonar.host.url="http://$sonarHost:$sonarPort" -Dsonar.login=118996445fb54e4903164d212bae9d903d6de135')
-					
-					if(jobStatus != 0) {
-						sh "exit 1"
-					} 
-				}
-			}
-		}
-	}
-	*/
-/*
-	stage('Upload Build Artifact') {
-		timestamps{
-			// Upload war file to Nexus artifactory
-			try {
-				nexusPublisher nexusInstanceId: 'Nexus-Server', nexusRepositoryId: 'maven-releases', packages: [[$class: 'MavenPackage', mavenAssetList: [[classifier: '', extension: '', filePath: './SimpleServlet/target/SimpleServlet-1.war']], mavenCoordinate: [artifactId: 'SimpleServlet', groupId: 'net.javatutorial.tutorials', packaging: 'war', version: '${JOB_NAME}-${BUILD_NUMBER}']]]
-				
-			} catch(Exception ex) {
-				sh "exit 1"
-			}
-		}
-	}
-	
-
-	stage('Create and Push Image') {
-		timestamps {
-			try {
-				
-				withEnv(["MVN_HOME=$mvnHome", "registryHost=$registryHost", "registryPort=$registryPort", "registryDockerPort=$registryDockerPort", "registryUser=$registryUser", "registryPassword=$registryPassword"]) {
-
-					if (isUnix()) {
-						// Download war file from Nexus repository
-						jobStatus = sh(returnStatus: true, script: '"$MVN_HOME/bin/mvn" dependency:get -DremoteRepositories=http://"${registryHost}":"${registryPort}"/repository/maven-releases/ -DgroupId=net.javatutorial.tutorials -DartifactId=SimpleServlet -Dversion=${JOB_NAME}-${BUILD_NUMBER} -Dpackaging=war -Ddest=${WORKSPACE}/docker/')
-						
-						if(jobStatus != 0) {
-							sh "exit 1"
-						} 
-						
-						// Create & push Docker Image
-						loginStatus = sh(returnStatus: true, script: 'docker login "${registryHost}":"${registryDockerPort}" -u "${registryUser}" -p "${registryPassword}"')
-						if(loginStatus != 0) {
-							sh "Login to Docker Registry failed"
-							sh "exit 1"
-						}
-						def customImage =  docker.build("${registryHost}:${registryDockerPort}/simpleservlet:${JOB_NAME}-${BUILD_NUMBER}", "${WORKSPACE}/docker/")
-						customImage.push()
-					}
-				}
-
-
-			} catch(Exception ex) {
-				sh "exit 1"
-			}
-		}
-	}
-	
-	stage('Deploy') {
-		timestamps {
-			try {
-				withEnv(["kubernetesNamespace=$kubernetesNamespace", "gkeProjectId=$gkeProjectId", "gkeClusterName=$gkeClusterName", "gkeProjectZone=$gkeProjectZone" ]) {
-					// Deploy docker image to kubernetes cluster
-					sh "sed 's/IMAGE_VERSION/${JOB_NAME}-${BUILD_NUMBER}/g' ${WORKSPACE}/docker/simpleservlet-deployment.yaml > ${WORKSPACE}/docker/simpleservlet-deployment-copy.yaml"
-					sh "mv ${WORKSPACE}/docker/simpleservlet-deployment-copy.yaml ${WORKSPACE}/docker/simpleservlet-deployment.yaml"
-					
-					step([$class: 'KubernetesEngineBuilder',namespace: "$kubernetesNamespace" , projectId: "$gkeProjectId" , clusterName: "$gkeClusterName" , zone: "$gkeProjectZone" , manifestPattern: 'docker/simpleservlet-deployment.yaml', credentialsId: "$gkeProjectId" , verifyDeployments: false])
-				}
-			} catch(Exception ex) {
-				sh "exit 1"
-			}
-		}
-	}*/
 
 }
