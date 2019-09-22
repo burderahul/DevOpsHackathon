@@ -40,7 +40,7 @@ node{
 			}
 		}
 	}
-	stage('Upload Build Artifact') {
+/*	stage('Upload Build Artifact') {
     		timestamps{
     			// Upload war file to Nexus artifactory
     			try {
@@ -52,4 +52,19 @@ node{
     		}
     	}
 
-}
+}*/
+
+stage('Static Analysis') {
+		timestamps {
+			// Run maven command to perform static analysis & publish report in sonar server
+			withEnv(["MVN_HOME=$mvnHome", "sonarHost=$sonarHost", "sonarPort=$sonarPort"]) {
+				if (isUnix()) {
+					jobStatus = sh(returnStatus: true, script: 'cd ${WORKSPACE}/src/sample-eureka_grp6/ && "$MVN_HOME/bin/mvn" sonar:sonar -Dsonar.projectKey=DevOpsHackathon -Dsonar.host.url="http://104.198.182.112:9000/sonar" -Dsonar.login=118996445fb54e4903164d212bae9d903d6de135')
+
+					if(jobStatus != 0) {
+						sh "exit 1"
+					}
+				}
+			}
+		}
+	}
