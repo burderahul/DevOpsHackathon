@@ -10,9 +10,10 @@ def gitUrl = "https://github.com/burderahul/DevOpsHackathon.git"
 	def sonarHost = "104.198.182.112"
 	def sonarPort = "9000"
 	def kubernetesNamespace= "default"
-	def gkeProjectId = "calcium-storm-252622"
-	def gkeClusterName = "standard-cluster-2"
+	def gkeProjectId = "devops-project-253500"
+	def gkeClusterName = "devops-cluster-1"
 	def gkeProjectZone = "us-central1-a"
+	def customImage =""
 
 node{
 	stage('Checkout') { 
@@ -94,11 +95,24 @@ stage('Create and Push Image') {
 					}
 				} */
 
-				def customImage =  docker.build("my_image:${JOB_NAME}-${BUILD_NUMBER}", "${WORKSPACE}/src/sample-eureka_grp6/eureka-server/")
+				 customImage =  docker.build("eureka6:${JOB_NAME}-${BUILD_NUMBER}", "${WORKSPACE}/src/sample-eureka_grp6/eureka-server/")
 			} catch(Exception ex) {
 				sh "exit 1"
 			}
 		}
 	}
+
+	stage('Deploy') {
+    		timestamps {
+    			try {
+    				withEnv(["kubernetesNamespace=$kubernetesNamespace", "gkeProjectId=$gkeProjectId", "gkeClusterName=$gkeClusterName", "gkeProjectZone=$gkeProjectZone" ]) {
+
+    					step([$class: 'KubernetesEngineBuilder',namespace: "$kubernetesNamespace" , projectId: "$gkeProjectId" , clusterName: "$gkeClusterName" , zone: "$gkeProjectZone" , manifestPattern: 'kube_deploy.yaml', credentialsId: "$gkeProjectId" , verifyDeployments: false])
+    				}
+    			} catch(Exception ex) {
+    				sh "exit 1"
+    			}
+    		}
+    	}
 
 }
