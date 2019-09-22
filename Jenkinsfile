@@ -93,8 +93,8 @@ stage('Create and Push Image') {
 						customImage.push()
 					}
 				} */
-
-				def customImage =  docker.build("Dockerfile", "burderahul/DevOpsHackathon/src/sample-eureka_grp6/eureka-server/")
+                
+				def customImage =  docker.build("my_image")
 			} catch(Exception ex) {
 				sh "exit 1"
 			}
