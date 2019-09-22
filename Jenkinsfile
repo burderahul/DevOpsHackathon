@@ -68,4 +68,37 @@ stage('Static Analysis') {
 			}
 		}
 	}
+stage('Create and Push Image') {
+		timestamps {
+			try {
+
+				/* withEnv(["MVN_HOME=$mvnHome", "registryHost=$registryHost", "registryPort=$registryPort", "registryDockerPort=$registryDockerPort", "registryUser=$registryUser", "registryPassword=$registryPassword"]) {
+					if (isUnix()) {
+						// Download war file from Nexus repository
+						jobStatus = sh(returnStatus: true, script: '"$MVN_HOME/bin/mvn" dependency:get -DremoteRepositories=http://"${registryHost}":"${registryPort}"/repository/maven-releases/ -DgroupId=net.javatutorial.tutorials -DartifactId=SimpleServlet -Dversion=${JOB_NAME}-${BUILD_NUMBER} -Dpackaging=war -Ddest=${WORKSPACE}/docker/')
+
+						if(jobStatus != 0) {
+							sh "exit 1"
+						}
+
+
+
+						// Create & push Docker Image
+						loginStatus = sh(returnStatus: true, script: 'docker login "${registryHost}":"${registryDockerPort}" -u "${registryUser}" -p "${registryPassword}"')
+						if(loginStatus != 0) {
+							sh "Login to Docker Registry failed"
+							sh "exit 1"
+						}
+						def customImage =  docker.build("${registryHost}:${registryDockerPort}/simpleservlet:${JOB_NAME}-${BUILD_NUMBER}", "${WORKSPACE}/docker/")
+						customImage.push()
+					}
+				} */
+
+				def customImage =  docker.build("/src/sample-eureka_grp6/eureka-server/target/eureka-server-0.0.1-SNAPSHOT.jar")
+			} catch(Exception ex) {
+				sh "exit 1"
+			}
+		}
+	}
+
 }
