@@ -5,7 +5,7 @@
 
     <groupId>org.exampledriven</groupId>
     <artifactId>spring-cloud-eureka-example</artifactId>
-    <version>0.0.1</version>
+    <version>0.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>Spring cloud eureka example parent</name>
