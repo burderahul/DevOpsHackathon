@@ -1,0 +1,180 @@
+
+yum install git
+yum install maven
+yum install java-1.8.0-openjdk-1.8.0.222.b10-1.el7_7.x86_64
+yum install wget
+yum install ansible
+
+
+-------- DOCKER-------------------------
+sudo yum install -y yum-utils \
+  device-mapper-persistent-data \
+  lvm2
+
+
+ sudo yum-config-manager \
+    --add-repo \
+    https://download.docker.com/linux/centos/docker-ce.repo
+
+sudo yum install docker-ce docker-ce-cli containerd.io
+
+yum list docker-ce --showduplicates | sort -r
+
+sudo yum install docker-ce-19.03.2 docker-ce-cli-19.03.2 containerd.io
+
+sudo systemctl start docker
+
+---------JENKINS-------------------------------------
+
+curl --silent --location http://pkg.jenkins-ci.org/redhat-stable/jenkins.repo | sudo tee /etc/yum.repos.d/jenkins.repo
+sudo rpm --import https://jenkins-ci.org/redhat/jenkins-ci.org.key
+sudo yum install jenkins
+sudo systemctl start jenkins
+systemctl status jenkins
+sudo systemctl enable jenkins
+
+----------SONAR------------------------------------
+
+sudo mkdir /app && cd /app
+sudo wget https://sonatype-download.global.ssl.fastly.net/nexus/3/nexus-3.0.2-02-unix.tar.gz
+sudo tar -xvf nexus-3.0.2-02-unix.tar.gz
+sudo mv nexus-3.0.2-02 nexus
+sudo adduser nexus
+sudo chown -R nexus:nexus /app/nexus
+sudo vi /app/nexus/bin/nexus.rc -> run_as_user="nexus"
+sudo vi /app/nexus/bin/nexus.vmoptions
+"
+-Xms1200M
+
+-Xmx1200M
+
+-XX:+UnlockDiagnosticVMOptions
+
+-XX:+UnsyncloadClass
+
+-Djava.net.preferIPv4Stack=truer
+
+-Dkaraf.home=.
+
+-Dkaraf.base=.
+
+-Dkaraf.etc=etc
+
+-Djava.util.logging.config.file=etc/java.util.logging.properties
+
+-Dkaraf.data=/nexus/nexus-data
+
+-Djava.io.tmpdir=data/tmp
+
+-Dkaraf.startLocalConsole=false"
+
+sudo ln -s /app/nexus/bin/nexus /etc/init.d/nexus
+sudo chkconfig --add nexus
+sudo chkconfig --levels 345 nexus on
+sudo service nexus start
+
+http://localhost:8081
+
+
+-----------SONARQUBE------------
+
+sudo yum install wget unzip -y
+sysctl vm.max_map_count
+sysctl fs.file-max
+ulimit -n
+ulimit -u
+sudo yum install https://download.postgresql.org/pub/repos/yum/10/redhat/rhel-7-x86_64/pgdg-centos10-10-2.noarch.rpm -y
+sudo yum install postgresql10-server postgresql10-contrib -y
+sudo /usr/pgsql-10/bin/postgresql-10-setup initdb
+
+sudo vi /var/lib/pgsql/10/data/pg_hba.conf
+peer to trust and idnet to md5
+
+sudo systemctl start postgresql-10
+sudo systemctl enable postgresql-10
+
+sudo -u postgres /usr/pgsql-10/bin/psql -c "SELECT version();"
+
+Step 1: Change the default password of the Postgres user. All Postgres commands have to be executed from this user.
+sudo passwd postgres
+
+Step 2: Login as postgres user with the new password.
+su - postgres
+
+Step 3: Login to the PostgreSQL CLI.
+psql
+
+Step 4: Create a sonarqubedb database.
+create database sonarqubedb;
+
+Step 5: Create the sonarqube DB user with a strongly encrypted password. Replace your-strong-password with a strong password.
+create user sonarqube with encrypted password 'your-strong-password';
+
+Step 6: Next, grant all privileges to sonrqube user on sonarqubedb.
+grant all privileges on sonarqubedb mydb to sonarqube;
+
+Step 7: Exit the psql prompt using the following command.
+\q
+
+Step 8: Switch to your sudo user using the exit command.
+exit
+
+Setup Sonarqube Web Server
+cd /opt
+sudo wget https://binaries.sonarsource.com/Distribution/sonarqube/sonarqube-7.6.zip
+sudo unzip sonarqube-7.6.zip
+sudo mv sonarqube-7.6 sonarqube
+sudo vi /opt/sonarqube/conf/sonar.properties
+
+"sonar.jdbc.username=sonar
+sonar.jdbc.password=sonar-db-password
+sonar.jdbc.url=jdbc:postgresql://localhost/sonar"
+"sonar.web.host=0.0.0.0
+sonar.web.port=80"
+"sonar.web.context=/sonar"
+
+sudo useradd sonar
+sudo chown -R sonar:sonar /opt/sonarqube
+
+
+sudo su - sonar
+cd /opt/sonarqube/bin/linux-x86-64
+./sonar.sh start
+sudo ./sonar.sh status
+
+sudo vi /etc/systemd/system/sonarqube.service
+"[Unit]
+ Description=SonarQube service
+ After=syslog.target network.target
+
+ [Service]
+ Type=simple
+ User=sonarqube
+ Group=sonarqube
+ PermissionsStartOnly=true
+ ExecStart=/bin/nohup java -Xms32m -Xmx32m -Djava.net.preferIPv4Stack=true -jar /opt/sonarqube/lib/sonar-application-7.6.jar
+ StandardOutput=syslog
+ LimitNOFILE=65536
+ LimitNPROC=8192
+ TimeoutStartSec=5
+ Restart=always
+
+ [Install]
+ WantedBy=multi-user.target"
+
+
+ sudo systemctl start sonarqube
+ sudo systemctl enable sonarqube
+ sudo systemctl status  sonarqube
+
+
+---------GCP SSH Changes---------------------------------------------------
+
+sudo ssh-keygen
+
+cat ~/.ssh/id_rsa.pub
+
+sudo vi /etc/ssh/sshd_config
+systemctl restart sshd
+
+--------------------------------
