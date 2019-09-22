@@ -1,0 +1,10 @@
+---
+- name: "Download the current stable release of Docker Compose:"
+  shell: curl -L "https://github.com/docker/compose/releases/download/1.24.1/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+
+- name: "Apply executable permissions to the binary and create the symbolic link"
+  file:
+    src: /usr/local/bin/docker-compose
+    dest: /usr/bin/docker-compose
+    state: link
+    mode: '+x'

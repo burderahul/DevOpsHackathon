@@ -1,0 +1,60 @@
+---
+- hosts: nexus_server
+  tasks:
+    - name: Install roles from Ansible Galaxy
+      shell: ansible-galaxy install "{{ item }}"
+      with_items:
+        - geerlingguy.docker
+        - andrewrothstein.docker-compose
+
+
+- hosts: nexus_server
+  roles:
+    - role: geerlingguy.docker
+      become: yes
+      vars:
+        docker_edition: 'ce'
+
+- hosts: nexus_server
+  roles:
+    - role : artifactory-instance-role
+      become: yes
+      vars:
+        docker_compose_source: nexus-docker-compose.yaml
+        docker_compose_destination: /work/
+        nexus_service_source: nexus.service
+        nexus_service_destination: /etc/systemd/system/
+        start_nexus_script_source: start-nexus.sh
+        start_nexus_script_destination: /etc/systemd/system/
+
+- hosts: nexus_server
+  - tasks:
+      - name: "enable nexus service and start the same"
+        systemd:
+          state: started
+          daemon_reload: yes
+          enabled: yes
+          name: nexus.service
+
+      - name: "copy docker-compose file to target"
+        copy:
+          src: "{{docker_compose_source}}"
+          dest: "{{docker_compose_destination}}"
+
+      - name: Create a directory if it does not exist
+        file:
+          path: /work
+          state: directory
+          mode: '0755'
+
+      - name: "copy nexus service file to target"
+        copy:
+          src: "{{nexus_service_source}}"
+          dest: "{{nexus_service_destination}}"
+          mode: 0664
+
+      - name: "copy start-nexus script to target"
+        copy:
+          src: "{{start_nexus_script_source}}"
+          dest: "{{start_nexus_script_destination}}"
+          mode: '+x'
