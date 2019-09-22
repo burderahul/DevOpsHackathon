@@ -33,9 +33,10 @@ sudo systemctl start jenkins
 systemctl status jenkins
 sudo systemctl enable jenkins
 
-----------SONAR------------------------------------
+----------SONARYPE NEXUS------------------------------------
 
 sudo mkdir /app && cd /app
+yum install wget
 sudo wget https://sonatype-download.global.ssl.fastly.net/nexus/3/nexus-3.0.2-02-unix.tar.gz
 sudo tar -xvf nexus-3.0.2-02-unix.tar.gz
 sudo mv nexus-3.0.2-02 nexus
@@ -111,7 +112,7 @@ Step 5: Create the sonarqube DB user with a strongly encrypted password. Replace
 create user sonarqube with encrypted password 'your-strong-password';
 
 Step 6: Next, grant all privileges to sonrqube user on sonarqubedb.
-grant all privileges on sonarqubedb mydb to sonarqube;
+grant all privileges on DATABASE sonarqubedb  to sonarqube;
 
 Step 7: Exit the psql prompt using the following command.
 \q
@@ -126,8 +127,8 @@ sudo unzip sonarqube-7.6.zip
 sudo mv sonarqube-7.6 sonarqube
 sudo vi /opt/sonarqube/conf/sonar.properties
 
-"sonar.jdbc.username=sonar
-sonar.jdbc.password=sonar-db-password
+"sonar.jdbc.username=sonarqube
+sonar.jdbc.password=your-strong-password
 sonar.jdbc.url=jdbc:postgresql://localhost/sonar"
 "sonar.web.host=0.0.0.0
 sonar.web.port=80"
