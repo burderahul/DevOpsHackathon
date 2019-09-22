@@ -2,7 +2,7 @@
 
 def gitUrl = "https://github.com/burderahul/DevOpsHackathon.git"
 	def mvnHome
-	def registryHost = "35.193.189.172"
+	def registryHost = "34.66.179.28"
 	def registryPort = "8081"
 	def registryDockerPort = "8083"
 	def registryUser = "admin"
