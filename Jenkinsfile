@@ -1,4 +1,4 @@
-node('master') {
+node {
 	def gitUrl = "https://github.com/burderahul/DevOpsHackathon.git"
 	def mvnHome
 	def registryHost = "35.193.189.172"
