@@ -102,17 +102,17 @@ stage('Create and Push Image') {
 		}
 	}
 
-	stage('Deploy') {
-    		timestamps {
-    			try {
-    				withEnv(["kubernetesNamespace=$kubernetesNamespace", "gkeProjectId=$gkeProjectId", "gkeClusterName=$gkeClusterName", "gkeProjectZone=$gkeProjectZone" ]) {
+//	stage('Deploy') {
+  //  		timestamps {
+    //			try {
+    //				withEnv(["kubernetesNamespace=$kubernetesNamespace", "gkeProjectId=$gkeProjectId", "gkeClusterName=$gkeClusterName", "gkeProjectZone=$gkeProjectZone" ]) {
 
-    					step([$class: 'KubernetesEngineBuilder',namespace: "$kubernetesNamespace" , projectId: "$gkeProjectId" , clusterName: "$gkeClusterName" , zone: "$gkeProjectZone" , manifestPattern: 'kube_deploy.yaml', credentialsId: "$gkeProjectId" , verifyDeployments: false])
-    				}
-    			} catch(Exception ex) {
-    				sh "exit 1"
-    			}
-    		}
-    	}
+    //					step([$class: 'KubernetesEngineBuilder',namespace: "$kubernetesNamespace" , projectId: "$gkeProjectId" , clusterName: "$gkeClusterName" , zone: "$gkeProjectZone" , manifestPattern: 'kube_deploy.yaml', credentialsId: "$gkeProjectId" , verifyDeployments: false])
+    //				}
+    //			} catch(Exception ex) {
+    //				sh "exit 1"
+    //			}
+    //		}
+    //	}
 
 }
